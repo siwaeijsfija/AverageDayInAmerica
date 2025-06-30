@@ -1,0 +1,18 @@
+-- Made by Professor Orion's School of Virtual Felony
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local hrp = char:WaitForChild("HumanoidRootPart")
+
+-- Find the model named "SlootMachine" in Workspace (or deep within your degeneracy)
+local sloot = workspace:FindFirstChild("SlootMachine", true)
+
+if sloot and sloot:IsA("Model") and sloot:FindFirstChild("PrimaryPart") then
+    hrp.CFrame = sloot.PrimaryPart.CFrame + Vector3.new(0, 5, 0) -- hover slightly above so you don’t faceplant
+elseif sloot and sloot:IsA("Model") then
+    -- Auto-assign primary part if lazy devs didn't
+    sloot.PrimaryPart = sloot:FindFirstChildWhichIsA("BasePart")
+    hrp.CFrame = sloot.PrimaryPart.CFrame + Vector3.new(0, 5, 0)
+else
+    warn("SlootMachine not found, you filthy animal.")
+end
