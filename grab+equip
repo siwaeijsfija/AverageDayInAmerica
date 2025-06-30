@@ -1,0 +1,89 @@
+-- Orion's Felony Control Panel™ - Black Box Edition
+-- One draggable frame, two sexy buttons: Grab Tools + Equip All
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart")
+local backpack = player:WaitForChild("Backpack")
+
+-- Create GUI parent
+local gui = Instance.new("ScreenGui")
+gui.Name = "OrionBlackOpsUI"
+gui.ResetOnSpawn = false
+gui.Parent = game:GetService("CoreGui")
+
+-- Create draggable black background frame
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 250, 0, 140)
+frame.Position = UDim2.new(0.5, -125, 0.7, 0)
+frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+
+-- Rounded frame corners
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0, 12)
+frameCorner.Parent = frame
+
+-- Create grab tools button
+local grabButton = Instance.new("TextButton")
+grabButton.Size = UDim2.new(1, -20, 0, 50)
+grabButton.Position = UDim2.new(0, 10, 0, 10)
+grabButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+grabButton.Text = "🧲 GRAB ALL TOOLS"
+grabButton.TextColor3 = Color3.new(1, 1, 1)
+grabButton.TextSize = 18
+grabButton.Font = Enum.Font.GothamBold
+grabButton.Parent = frame
+
+local grabCorner = Instance.new("UICorner")
+grabCorner.CornerRadius = UDim.new(0, 8)
+grabCorner.Parent = grabButton
+
+-- Create equip tools button
+local equipButton = Instance.new("TextButton")
+equipButton.Size = UDim2.new(1, -20, 0, 50)
+equipButton.Position = UDim2.new(0, 10, 0, 75)
+equipButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+equipButton.Text = "🧷 EQUIP ALL TOOLS"
+equipButton.TextColor3 = Color3.new(1, 1, 1)
+equipButton.TextSize = 18
+equipButton.Font = Enum.Font.GothamBold
+equipButton.Parent = frame
+
+local equipCorner = Instance.new("UICorner")
+equipCorner.CornerRadius = UDim.new(0, 8)
+equipCorner.Parent = equipButton
+
+-- Grab tools functionality
+grabButton.MouseButton1Click:Connect(function()
+    local count = 0
+    for _, tool in ipairs(workspace:GetDescendants()) do
+        if tool:IsA("Tool") and tool:FindFirstChildWhichIsA("BasePart") then
+            firetouchinterest(hrp, tool.Handle or tool:FindFirstChildWhichIsA("BasePart"), 0)
+            firetouchinterest(hrp, tool.Handle or tool:FindFirstChildWhichIsA("BasePart"), 1)
+            count += 1
+        end
+    end
+    grabButton.Text = "✅ Grabbed " .. count .. " Tools"
+    task.delay(0.1, function()
+        grabButton.Text = "🧲 GRAB ALL TOOLS"
+    end)
+end)
+
+-- Equip tools functionality
+equipButton.MouseButton1Click:Connect(function()
+    local equipped = 0
+    for _, tool in ipairs(backpack:GetChildren()) do
+        if tool:IsA("Tool") then
+            tool.Parent = character
+            equipped += 1
+        end
+    end
+    equipButton.Text = "✅ Equipped " .. equipped .. " Tools"
+    task.delay(0.1, function()
+        equipButton.Text = "🧷 EQUIP ALL TOOLS"
+    end)
+end)
