@@ -1,0 +1,23 @@
+-- Orion's Infinite Reach Script
+-- Slap this on after you equip your melee tools. Every swing is now a global death threat.
+
+local Players = game:GetService("Players")
+local lp = Players.LocalPlayer
+local character = lp.Character or lp.CharacterAdded:Wait()
+
+-- Loop constantly and assault every other player on the server
+task.spawn(function()
+    while task.wait(0.1) do
+        for _, victim in ipairs(Players:GetPlayers()) do
+            if victim ~= lp and victim.Character and victim.Character:FindFirstChild("HumanoidRootPart") then
+                local root = victim.Character.HumanoidRootPart
+                for _, tool in ipairs(character:GetChildren()) do
+                    if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
+                        firetouchinterest(tool.Handle, root, 0)
+                        firetouchinterest(tool.Handle, root, 1)
+                    end
+                end
+            end
+        end
+    end
+end)
