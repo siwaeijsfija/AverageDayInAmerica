@@ -1,0 +1,124 @@
+-- CONFIG
+local ESPColor = Color3.fromRGB(175, 25, 255)
+local OutlineColor = Color3.fromRGB(255, 255, 255)
+local TextColor = Color3.new(1,1,1)
+local UpdateRate = 0.05
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Camera = workspace.CurrentCamera
+local LP = Players.LocalPlayer
+
+local Drawings = {}
+
+function CreateDrawing(type, props)
+    local obj = Drawing.new(type)
+    for i,v in pairs(props) do
+        obj[i] = v
+    end
+    return obj
+end
+
+function ClearESP(plr)
+    if Drawings[plr] then
+        for _,v in pairs(Drawings[plr]) do
+            v:Remove()
+        end
+        Drawings[plr] = nil
+    end
+end
+
+function AddESP(plr)
+    Drawings[plr] = {
+        Box = CreateDrawing("Square", {Color = ESPColor, Thickness = 1, Transparency = 1, Filled = false, Visible = false}),
+        Name = CreateDrawing("Text", {Color = TextColor, Size = 14, Center = true, Outline = true, Visible = false}),
+        Health = CreateDrawing("Line", {Color = Color3.new(0,1,0), Thickness = 2, Visible = false}),
+        Distance = CreateDrawing("Text", {Color = TextColor, Size = 12, Center = true, Outline = true, Visible = false}),
+        Tool = CreateDrawing("Text", {Color = TextColor, Size = 12, Center = true, Outline = true, Visible = false}),
+        Skeleton = {}
+    }
+    for _,joint in pairs({"Head", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg"}) do
+        Drawings[plr].Skeleton[joint] = CreateDrawing("Line", {Color = ESPColor, Thickness = 1, Transparency = 1, Visible = false})
+    end
+end
+
+function UpdateESP()
+    for _,plr in pairs(Players:GetPlayers()) do
+        if plr ~= LP and plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("Head") then
+            local root = plr.Character:FindFirstChild("HumanoidRootPart")
+            if not Drawings[plr] then AddESP(plr) end
+            local esp = Drawings[plr]
+
+            local pos, onscreen = Camera:WorldToViewportPoint(root.Position)
+            if onscreen then
+                -- Box
+                local size = Vector2.new(50, 100)
+                esp.Box.Position = Vector2.new(pos.X - size.X/2, pos.Y - size.Y/2)
+                esp.Box.Size = size
+                esp.Box.Visible = true
+
+                -- Name
+                esp.Name.Text = plr.Name
+                esp.Name.Position = Vector2.new(pos.X, pos.Y - size.Y/2 - 15)
+                esp.Name.Visible = true
+
+                -- Health bar
+                local hp = plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth
+                esp.Health.From = Vector2.new(pos.X - size.X/2 - 5, pos.Y + size.Y/2)
+                esp.Health.To = Vector2.new(pos.X - size.X/2 - 5, pos.Y + size.Y/2 - (hp * size.Y))
+                esp.Health.Visible = true
+
+                -- Distance
+                local dist = (LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") and (root.Position - LP.Character.HumanoidRootPart.Position).Magnitude) or 0
+                esp.Distance.Text = string.format("%.0f studs", dist)
+                esp.Distance.Position = Vector2.new(pos.X, pos.Y + size.Y/2 + 5)
+                esp.Distance.Visible = true
+
+                -- Tool
+                local tool = plr.Character:FindFirstChildOfClass("Tool")
+                esp.Tool.Text = tool and tool.Name or ""
+                esp.Tool.Position = Vector2.new(pos.X, pos.Y + size.Y/2 + 20)
+                esp.Tool.Visible = true
+
+                -- Skeleton
+                local function drawBone(a, b)
+                    if a and b and a:IsA("BasePart") and b:IsA("BasePart") then
+                        local a2d, visA = Camera:WorldToViewportPoint(a.Position)
+                        local b2d, visB = Camera:WorldToViewportPoint(b.Position)
+                        if visA and visB then
+                            local line = esp.Skeleton[a.Name] or CreateDrawing("Line", {Color = ESPColor, Thickness = 1})
+                            line.From = Vector2.new(a2d.X, a2d.Y)
+                            line.To = Vector2.new(b2d.X, b2d.Y)
+                            line.Visible = true
+                        end
+                    end
+                end
+
+                local ch = plr.Character
+                drawBone(ch:FindFirstChild("Head"), ch:FindFirstChild("Torso"))
+                drawBone(ch:FindFirstChild("Left Arm"), ch:FindFirstChild("Torso"))
+                drawBone(ch:FindFirstChild("Right Arm"), ch:FindFirstChild("Torso"))
+                drawBone(ch:FindFirstChild("Left Leg"), ch:FindFirstChild("Torso"))
+                drawBone(ch:FindFirstChild("Right Leg"), ch:FindFirstChild("Torso"))
+            else
+                for _,v in pairs(esp) do
+                    if typeof(v) == "table" then
+                        for _,sk in pairs(v) do sk.Visible = false end
+                    elseif v.Visible then
+                        v.Visible = false
+                    end
+                end
+            end
+        else
+            ClearESP(plr)
+        end
+    end
+end
+
+RunService.RenderStepped:Connect(function()
+    pcall(UpdateESP)
+end)
+
+Players.PlayerRemoving:Connect(function(plr)
+    ClearESP(plr)
+end)
