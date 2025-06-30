@@ -1,0 +1,133 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local lp = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+local connections = {}
+
+local function Create(type, props)
+	local obj = Drawing.new(type)
+	for i,v in pairs(props) do
+		obj[i] = v
+	end
+	return obj
+end
+
+local function R6Skeleton(plr)
+	local lines = {}
+	for i = 1, 5 do
+		lines[i] = Create("Line", {
+			Color = Color3.fromRGB(255, 255, 255),
+			Thickness = 2,
+			Transparency = 1,
+			Visible = false,
+		})
+	end
+
+	local nameTag = Create("Text", {
+		Color = Color3.new(1, 1, 1),
+		Size = 20,
+		Font = 2,
+		Center = true,
+		Outline = true,
+		Visible = false,
+	})
+
+	local function remove()
+		for _, l in pairs(lines) do l:Remove() end
+		nameTag:Remove()
+	end
+
+	local function Update()
+		local char = plr.Character
+		if not (char and char:FindFirstChild("HumanoidRootPart")) then
+			for _, l in pairs(lines) do l.Visible = false end
+			nameTag.Visible = false
+			return
+		end
+
+		local parts = {
+			head = char:FindFirstChild("Head"),
+			torso = char:FindFirstChild("Torso"),
+			larm = char:FindFirstChild("Left Arm"),
+			rarm = char:FindFirstChild("Right Arm"),
+			lleg = char:FindFirstChild("Left Leg"),
+			rleg = char:FindFirstChild("Right Leg"),
+		}
+
+		if not (parts.head and parts.torso) then return end
+
+		local screen = {}
+		for name, part in pairs(parts) do
+			local pos, vis = camera:WorldToViewportPoint(part.Position)
+			screen[name] = vis and Vector2.new(pos.X, pos.Y) or nil
+		end
+
+		-- Draw skeleton lines
+		if screen.head and screen.torso then
+			lines[1].From = screen.head
+			lines[1].To = screen.torso
+			lines[1].Visible = true
+		else lines[1].Visible = false end
+
+		if screen.torso and screen.larm then
+			lines[2].From = screen.torso
+			lines[2].To = screen.larm
+			lines[2].Visible = true
+		else lines[2].Visible = false end
+
+		if screen.torso and screen.rarm then
+			lines[3].From = screen.torso
+			lines[3].To = screen.rarm
+			lines[3].Visible = true
+		else lines[3].Visible = false end
+
+		if screen.torso and screen.lleg then
+			lines[4].From = screen.torso
+			lines[4].To = screen.lleg
+			lines[4].Visible = true
+		else lines[4].Visible = false end
+
+		if screen.torso and screen.rleg then
+			lines[5].From = screen.torso
+			lines[5].To = screen.rleg
+			lines[5].Visible = true
+		else lines[5].Visible = false end
+
+		-- Name Tag
+		if screen.head then
+			nameTag.Position = screen.head - Vector2.new(0, 20)
+			nameTag.Text = plr.Name
+			nameTag.Visible = true
+		else
+			nameTag.Visible = false
+		end
+	end
+
+	connections[plr] = RunService.RenderStepped:Connect(Update)
+	plr.AncestryChanged:Connect(function()
+		if not plr:IsDescendantOf(Players) then
+			connections[plr]:Disconnect()
+			remove()
+		end
+	end)
+end
+
+-- Hook into players
+for _, plr in ipairs(Players:GetPlayers()) do
+	if plr ~= lp then
+		R6Skeleton(plr)
+	end
+end
+
+Players.PlayerAdded:Connect(function(plr)
+	if plr ~= lp then
+		R6Skeleton(plr)
+	end
+end)
+
+Players.PlayerRemoving:Connect(function(plr)
+	if connections[plr] then
+		connections[plr]:Disconnect()
+	end
+end)
