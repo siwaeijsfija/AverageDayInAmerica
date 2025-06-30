@@ -1,0 +1,15 @@
+-- Infinite Jump (Less Detectable Method)
+-- Exploit Required (Synapse X, KRNL, etc.)
+
+-- Toggles
+getgenv().infJump = true
+
+-- Connect once
+game:GetService("UserInputService").JumpRequest:Connect(function()
+    if getgenv().infJump then
+        local humanoid = game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid:ChangeState("Jumping")
+        end
+    end
+end)
