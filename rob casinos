@@ -1,0 +1,46 @@
+-- Slick exploit GUI to fire every "MoneyPart2" ClickDetector in the game
+-- Because fuck legal income
+
+-- Parent GUI to CoreGui (injector-style)
+local gui = Instance.new("ScreenGui")
+gui.Name = "CasinoRobberGUI"
+gui.ResetOnSpawn = false
+gui.Parent = game:GetService("CoreGui")
+
+-- Create draggable rob button
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 220, 0, 45)
+button.Position = UDim2.new(0.5, -110, 0.85, 0) -- lower screen position
+button.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+button.Text = "💸 ROB EVERY CASINO 💸"
+button.TextColor3 = Color3.new(1, 1, 1)
+button.TextSize = 18
+button.Font = Enum.Font.GothamBold
+button.Draggable = true
+button.Active = true
+button.Selectable = true
+button.Parent = gui
+
+-- Rounded button edges
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = button
+
+-- Function to rob all casino MoneyPart2 ClickDetectors
+button.MouseButton1Click:Connect(function()
+    local total = 0
+    for _, v in ipairs(workspace:GetDescendants()) do
+        if v:IsA("ClickDetector") and v.Name == "MoneyPart2" then
+            fireclickdetector(v)
+            total += 1
+        end
+    end
+
+    -- Update button text temporarily
+    button.Text = "✅ Robbed " .. total .. " Casinos"
+    
+    -- Reset text after 0.1 seconds
+    task.delay(0.1, function()
+        button.Text = "💸 ROB EVERY CASINO 💸"
+    end)
+end)
